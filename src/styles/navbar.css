@@ -1,0 +1,31 @@
+.navbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background-color: #0f172a; /* fondo oscuro */
+  color: white;
+}
+
+.navbar h1 {
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #3b82f6; /* azul */
+}
+
+.nav-links {
+  display: flex;
+  gap: 2rem;
+  list-style: none;
+}
+
+.nav-links a {
+  text-decoration: none;
+  color: #e5e7eb;
+  font-weight: 500;
+  transition: color 0.3s;
+}
+
+.nav-links a:hover {
+  color: #3b82f6; /* azul al pasar el mouse */
+}

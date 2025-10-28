@@ -1,0 +1,38 @@
+.cta {
+  background-color: #1e293b; /* gris azulado oscuro */
+  color: white;
+  text-align: center;
+  padding: 4rem 2rem;
+  border-radius: 12px;
+  margin: 4rem auto;
+  max-width: 900px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.cta h2 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #f1f5f9; /* texto claro */
+}
+
+.cta p {
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  color: #cbd5e1; /* gris más suave */
+}
+
+.cta button {
+  background-color: #3b82f6; /* azul */
+  color: white;
+  border: none;
+  padding: 0.8rem 1.6rem;
+  border-radius: 8px;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+.cta button:hover {
+  background-color: #2563eb; /* azul más oscuro */
+}
