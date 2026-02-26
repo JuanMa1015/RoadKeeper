@@ -14,7 +14,7 @@ export default function Home() {
         <p>
           Comienza a gestionar los mantenimientos y recordatorios de tu moto y mejora la organización
         </p>
-        <button onClick={() => navigate("/formulario")}>
+        <button onClick={() => navigate("/login")}>
           Empezar ahora
         </button>
       </section>

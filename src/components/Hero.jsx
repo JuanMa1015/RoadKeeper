@@ -3,7 +3,7 @@ import moto from "../assets/moto.png";
 
 export default function Hero() {
   const handleClick = () => {
-    window.location.href = "/registro"; // redirige al formulario
+    window.location.href = "/register.jsx"; // redirige al formulario
   };
 
   return (
