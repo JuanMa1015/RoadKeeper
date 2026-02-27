@@ -1,95 +1,96 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createMoto } from '../services/motoService';
+import { MARCAS_MODELOS } from '../constants/motoData';
 
 export default function AddMoto() {
-    const navigate = useNavigate();
-    const [formData, setFormData] = useState({
-        placa: '',
-        marca: '',
-        modelo: '',
-        kilometraje_actual: 0
-    });
-    const [loading, setLoading] = useState(false);
-    const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({ placa: '', marca: '', modelo: '', kilometraje_actual: 0 });
+  const [errors, setErrors] = useState({});
+  const navigate = useNavigate();
 
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setLoading(true);
-        setError(null);
+  const validarPlaca = (placa) => {
+    // Ejemplo para placa colombiana o estándar: 3 letras y 3 caracteres alfanuméricos
+    const regex = /^[A-Z]{3}[0-9A-Z]{2,3}$/;
+    return regex.test(placa.toUpperCase());
+  };
 
-        try {
-            await createMoto({
-                ...formData,
-                placa: formData.placa.toUpperCase(), // Normalizamos la placa
-                kilometraje_actual: Number(formData.kilometraje_actual) // Blindaje JS
-            });
-            alert("Moto registrada con éxito");
-            navigate('/mantenimientos'); // Lo devolvemos a su lista de motos
-        } catch (err) {
-            setError(err);
-        } finally {
-            setLoading(false);
-        }
-    };
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!validarPlaca(formData.placa)) {
+      setErrors({ placa: "Formato de placa inválido (Ej: ABC12D)" });
+      return;
+    }
+    try {
+      await createMoto({ ...formData, placa: formData.placa.toUpperCase() });
+      navigate('/mantenimientos');
+    } catch (err) {
+      setErrors({ server: err });
+    }
+  };
 
-    return (
-        <div className="max-w-md mx-auto mt-10 p-6 bg-white rounded-lg shadow-md">
-            <h2 className="text-2xl font-bold mb-6 text-center text-blue-600">Registrar Moto</h2>
-            
-            <form onSubmit={handleSubmit} className="space-y-4">
-                {error && <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Placa</label>
-                    <input
-                        className="w-full p-2 border rounded uppercase"
-                        placeholder="ABC12D"
-                        maxLength={6}
-                        onChange={e => setFormData({...formData, placa: e.target.value})}
-                        required
-                    />
-                </div>
-                
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Marca</label>
-                    <input
-                        className="w-full p-2 border rounded"
-                        placeholder="Ej: Yamaha"
-                        onChange={e => setFormData({...formData, marca: e.target.value})}
-                        required
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Modelo</label>
-                    <input
-                        className="w-full p-2 border rounded"
-                        placeholder="Ej: MT-03"
-                        onChange={e => setFormData({...formData, modelo: e.target.value})}
-                    />
-                </div>
-
-                <div>
-                    <label className="block text-sm font-medium text-gray-700">Kilometraje Actual</label>
-                    <input
-                        className="w-full p-2 border rounded"
-                        type="number"
-                        min="0"
-                        value={formData.kilometraje_actual}
-                        onChange={e => setFormData({...formData, kilometraje_actual: e.target.value})}
-                        required
-                    />
-                </div>
-
-                <button 
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700 transition disabled:bg-gray-400"
-                >
-                    {loading ? 'Guardando...' : 'Registrar Moto'}
-                </button>
-            </form>
+  return (
+    <div className="max-w-2xl mx-auto bg-slate-800 p-8 rounded-3xl border border-slate-700 shadow-2xl">
+      <h2 className="text-3xl font-black mb-6 text-white text-center">Registrar Nueva Moto</h2>
+      
+      <form onSubmit={handleSubmit} className="space-y-6">
+        {/* Input Placa */}
+        <div>
+          <label className="block text-slate-400 text-sm font-bold mb-2">PLACA</label>
+          <input 
+            type="text"
+            className={`w-full bg-slate-900 border ${errors.placa ? 'border-red-500' : 'border-slate-700'} p-4 rounded-xl focus:outline-none focus:border-blue-500 uppercase`}
+            placeholder="Ej: ABC12D"
+            onChange={(e) => setFormData({...formData, placa: e.target.value})}
+            required
+          />
+          {errors.placa && <p className="text-red-500 text-xs mt-2">{errors.placa}</p>}
         </div>
-    );
+
+        {/* Select Marca */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label className="block text-slate-400 text-sm font-bold mb-2">MARCA</label>
+            <select 
+              className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl focus:outline-none"
+              onChange={(e) => setFormData({...formData, marca: e.target.value, modelo: ''})}
+              required
+            >
+              <option value="">Selecciona Marca</option>
+              {Object.keys(MARCAS_MODELOS).map(m => <option key={m} value={m}>{m}</option>)}
+            </select>
+          </div>
+
+          {/* Select Modelo Dependiente */}
+          <div>
+            <label className="block text-slate-400 text-sm font-bold mb-2">MODELO</label>
+            <select 
+              className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl focus:outline-none disabled:opacity-30"
+              disabled={!formData.marca}
+              onChange={(e) => setFormData({...formData, modelo: e.target.value})}
+              required
+            >
+              <option value="">Selecciona Modelo</option>
+              {formData.marca && MARCAS_MODELOS[formData.marca].map(mod => (
+                <option key={mod} value={mod}>{mod}</option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        <div>
+          <label className="block text-slate-400 text-sm font-bold mb-2">KILOMETRAJE ACTUAL</label>
+          <input 
+            type="number"
+            className="w-full bg-slate-900 border border-slate-700 p-4 rounded-xl focus:outline-none"
+            onChange={(e) => setFormData({...formData, kilometraje_actual: e.target.value})}
+            required
+          />
+        </div>
+
+        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-xl transition-all">
+          GUARDAR EN MI GARAJE
+        </button>
+      </form>
+    </div>
+  );
 }

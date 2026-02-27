@@ -1,6 +1,6 @@
 import api from '../api/axios';
 
-// Debate: Ya no necesitamos la interfaz { Moto }, JS maneja los objetos libremente
+
 export const createMoto = async (motoData) => {
     try {
         const response = await api.post('/motos', motoData);
@@ -17,4 +17,20 @@ export const getMotos = async () => {
     } catch (error) {
         throw error.response?.data?.detail || "Error al obtener las motos";
     }
+};
+
+// Nueva función para actualizar solo el kilometraje
+export const updateKilometraje = async (motoId, nuevoKm) => {
+    try {
+        // Pasamos el nuevo_km como parámetro de consulta (?nuevo_km=...)
+        const response = await api.patch(`/motos/${motoId}/kilometraje?nuevo_km=${nuevoKm}`);
+        return response.data;
+    } catch (error) {
+        throw error.response?.data?.detail || "Error al actualizar kilometraje";
+    }
+};
+
+export const addMantenimiento = async (data) => {
+  const response = await axiosInstance.post('/mantenimientos', data);
+  return response.data;
 };

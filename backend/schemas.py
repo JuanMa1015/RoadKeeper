@@ -1,36 +1,52 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel
+from datetime import datetime
+from typing import List, Optional
 
-class UserCreate(BaseModel):
+
+# --- SCHEMAS DE USUARIO ---
+class UserBase(BaseModel):
     username: str
-    email: EmailStr
+    email: str
+
+class UserCreate(UserBase):
     password: str
 
-class UserResponse(BaseModel):
+class UserResponse(UserBase): # <--- ESTE ES EL QUE FALTA
     id: int
-    username: str
-    email: EmailStr
+
+    class Config:
+        from_attributes = True
+        
+# --- SCHEMAS DE MANTENIMIENTO ---
+class MantenimientoBase(BaseModel):
+    tipo: str
+    km_momento_servicio: int
+
+class MantenimientoCreate(MantenimientoBase):
+    moto_id: int
+
+class MantenimientoResponse(MantenimientoBase):
+    id: int
+    fecha: datetime
+
     class Config:
         from_attributes = True
 
-
-from pydantic import BaseModel, EmailStr
-from typing import Optional
-
-# Esquema para crear una moto
-class MotoCreate(BaseModel):
+# --- SCHEMAS DE MOTO (Actualizado) ---
+class MotoBase(BaseModel):
     placa: str
     marca: str
-    modelo: Optional[str] = None
-    kilometraje_actual: int
+    modelo: str
+    kilometraje_actual: float
 
-# Esquema para responder con los datos de la moto (lo que faltaba)
-class MotoResponse(BaseModel):
+class MotoCreate(MotoBase):
+    pass
+
+class MotoResponse(MotoBase):
     id: int
-    placa: str
-    marca: str
-    modelo: Optional[str]
-    kilometraje_actual: int
     user_id: int
+    # Esto permite ver el historial de mantenimientos dentro de la moto
+    mantenimientos: List[MantenimientoResponse] = []
 
     class Config:
-        from_attributes = True # Esto permite que SQLAlchemy lea los datos
+        from_attributes = True

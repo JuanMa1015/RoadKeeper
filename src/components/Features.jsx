@@ -1,31 +1,19 @@
-import "../styles/features.css";
+const features = [
+  { title: 'Recordatorios', desc: 'Notificaciones sobre mantenimientos y pagos.', icon: '🔔', color: 'from-orange-500/20' },
+  { title: 'Mantenimientos', desc: 'Registra servicios según el kilometraje.', icon: '🛠️', color: 'from-blue-500/20' },
+  { title: 'Reportes', desc: 'Consulta el historial de gastos y facturas.', icon: '📊', color: 'from-emerald-500/20' },
+];
 
 export default function Features() {
   return (
-    <section className="features-section">
-      <h2>Funciones principales</h2>
-      <div className="features">
-        <div className="feature-card">
-          <h3>🔔 Recordatorios</h3>
-          <p>
-            Recibe notificaciones y alertas sobre los mantenimientos y pagos
-            pendientes.
-          </p>
+    <section className="grid grid-cols-1 md:grid-cols-3 gap-8 py-20">
+      {features.map((f, i) => (
+        <div key={i} className={`bg-slate-900/50 border border-slate-800 p-8 rounded-[2rem] hover:translate-y-[-10px] transition-all duration-300 bg-gradient-to-br ${f.color} to-transparent`}>
+          <div className="text-4xl mb-4">{f.icon}</div>
+          <h3 className="text-xl font-black text-white mb-2 uppercase italic">{f.title}</h3>
+          <p className="text-slate-400 text-sm leading-relaxed font-medium">{f.desc}</p>
         </div>
-        <div className="feature-card">
-          <h3>🛠️ Mantenimientos</h3>
-          <p>
-            Registra los mantenimientos realizados y próximos según el
-            kilometraje de tu moto.
-          </p>
-        </div>
-        <div className="feature-card">
-          <h3>📊 Reportes</h3>
-          <p>
-            Consulta el historial de mantenimientos, facturas y gestos.
-          </p>
-        </div>
-      </div>
+      ))}
     </section>
   );
 }

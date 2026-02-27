@@ -1,9 +1,16 @@
-import "../styles/footer.css";
+import React from 'react';
 
-export default function Footer() {
+const Footer = () => {
   return (
-    <footer>
-      © 2026 RoadKeeper: Todos los derechos reservados.
+    <footer className="w-full border-t border-slate-800 bg-slate-900 py-6">
+      <div className="max-w-[1400px] mx-auto px-4 text-center">
+        <p className="text-slate-500 text-sm">
+          © 2026 <span className="text-blue-500 font-bold">RoadKeeper</span>. 
+          Todos los derechos reservados.
+        </p>
+      </div>
     </footer>
   );
-}
+};
+
+export default Footer;

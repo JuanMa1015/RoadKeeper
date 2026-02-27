@@ -1,79 +1,56 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
-import { registerUser } from '../services/authService';
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Register() {
-    const navigate = useNavigate();
-    
-    const [formData, setFormData] = useState({
-        username: '',
-        email: '',
-        password: '',
-        confirmPassword: ''
-    });
+  const [formData, setFormData] = useState({ email: '', password: '', confirmPassword: '' });
+  const navigate = useNavigate();
 
-    const [error, setError] = useState(null);
-    const [loading, setLoading] = useState(false);
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (formData.password !== formData.confirmPassword) {
+      alert("Las contraseñas no coinciden");
+      return;
+    }
+    console.log("Datos de registro:", formData);
+    // Aquí iría tu llamada al backend
+    navigate('/login');
+  };
 
-    const handleChange = (e) => {
-        setFormData({ ...formData, [e.target.name]: e.target.value });
-    };
-
-    const handleSubmit = async (e) => {
-        e.preventDefault();
-        setError(null);
-
-        // Validación manual en JS
-        if (formData.password !== formData.confirmPassword) {
-            setError("Las contraseñas no coinciden");
-            return;
-        }
-
-        if (formData.password.length < 6) {
-            setError("La contraseña debe tener al menos 6 caracteres");
-            return;
-        }
-
-        setLoading(true);
-
-        try {
-            await registerUser({
-                username: formData.username,
-                email: formData.email,
-                password: formData.password
-            });
-            alert("¡Cuenta creada! Ahora inicia sesión.");
-            navigate('/login');
-        } catch (err) {
-            setError(err);
-        } finally {
-            setLoading(false);
-        }
-    };
-
-    return (
-        <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100">
-            <div className="w-full max-w-md p-8 bg-white rounded-lg shadow-lg">
-                <h2 className="text-3xl font-bold text-center text-blue-600 mb-6">Crear Cuenta</h2>
-                
-                <form onSubmit={handleSubmit} className="space-y-4">
-                    {error && <div className="p-3 text-sm text-red-700 bg-red-100 rounded-lg">{error}</div>}
-
-                    <input type="text" name="username" placeholder="Usuario" required onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-                    <input type="email" name="email" placeholder="Correo" required onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-                    <input type="password" name="password" placeholder="Contraseña" required onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-                    <input type="password" name="confirmPassword" placeholder="Confirmar Contraseña" required onChange={handleChange} className="w-full px-4 py-2 border rounded-md" />
-
-                    <button type="submit" disabled={loading} className="w-full py-2 text-white bg-blue-600 hover:bg-blue-700 rounded-md disabled:bg-gray-400">
-                        {loading ? 'Registrando...' : 'Registrarse'}
-                    </button>
-                </form>
-                <div className="mt-4 text-center">
-                    <Link to="/login" className="text-sm text-blue-600 hover:underline">
-                        ¿Ya tienes cuenta? Inicia sesión
-                    </Link>
-                </div>
-            </div>
+  return (
+    <div className="max-w-md mx-auto bg-slate-900 p-10 rounded-[2.5rem] border border-slate-800 shadow-2xl mt-10">
+      <h2 className="text-4xl font-black text-white italic mb-8 uppercase tracking-tighter text-center">Crear Cuenta</h2>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <div>
+          <label className="block text-slate-500 text-xs font-black uppercase mb-2 ml-1">Email</label>
+          <input 
+            type="email" 
+            required
+            className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-white"
+            onChange={(e) => setFormData({...formData, email: e.target.value})}
+          />
         </div>
-    );
+        <div>
+          <label className="block text-slate-500 text-xs font-black uppercase mb-2 ml-1">Contraseña</label>
+          <input 
+            type="password" 
+            required
+            className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-white"
+            onChange={(e) => setFormData({...formData, password: e.target.value})}
+          />
+        </div>
+        <div>
+          <label className="block text-slate-500 text-xs font-black uppercase mb-2 ml-1">Confirmar Contraseña</label>
+          <input 
+            type="password" 
+            required
+            className="w-full bg-slate-950 border border-slate-800 p-4 rounded-2xl focus:border-blue-500 outline-none transition-all text-white"
+            onChange={(e) => setFormData({...formData, confirmPassword: e.target.value})}
+          />
+        </div>
+        <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all shadow-lg shadow-blue-900/20">
+          REGISTRARME
+        </button>
+      </form>
+    </div>
+  );
 }
