@@ -17,7 +17,7 @@ function App() {
         <main className="flex-grow w-full max-w-[1400px] mx-auto px-6 py-8">
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/login" element={<Login />} /> {/* <-- Ruta definida en minúsculas */}
+            <Route path="/login" element={<Login />} /> 
             <Route path="/registro" element={<Register />} />
             <Route path="/mantenimientos" element={<Mantenimientos />} />
             <Route path="/add-moto" element={<AddMoto />} />

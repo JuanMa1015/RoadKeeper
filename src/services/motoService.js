@@ -1,36 +1,34 @@
-import api from '../api/axios';
+import axios from 'axios';
 
+const api = axios.create({ baseURL: 'http://localhost:8000' });
+
+api.interceptors.request.use((config) => {
+  const token = localStorage.getItem('token');
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+export const getMotos = async () => (await api.get('/motos')).data;
 
 export const createMoto = async (motoData) => {
-    try {
-        const response = await api.post('/motos', motoData);
-        return response.data;
-    } catch (error) {
-        throw error.response?.data?.detail || "Error al registrar la moto";
-    }
+    const token = localStorage.getItem('token');
+    const response = await axios.post('http://localhost:8000/motos', motoData, {
+        headers: {
+            'Authorization': `Bearer ${token}` // ¡Esto es vital!
+        }
+    });
+    return response.data;
 };
 
-export const getMotos = async () => {
-    try {
-        const response = await api.get('/motos');
-        return response.data;
-    } catch (error) {
-        throw error.response?.data?.detail || "Error al obtener las motos";
-    }
+export const updateKilometraje = async (id, km) => {
+  return (await api.put(`/motos/${id}/km`, { kilometraje_actual: km })).data;
 };
 
-// Nueva función para actualizar solo el kilometraje
-export const updateKilometraje = async (motoId, nuevoKm) => {
-    try {
-        // Pasamos el nuevo_km como parámetro de consulta (?nuevo_km=...)
-        const response = await api.patch(`/motos/${motoId}/kilometraje?nuevo_km=${nuevoKm}`);
-        return response.data;
-    } catch (error) {
-        throw error.response?.data?.detail || "Error al actualizar kilometraje";
-    }
+// Se agregó la exportación que faltaba
+export const getNotificaciones = async () => {
+  return (await api.get('/notificaciones')).data;
 };
 
-export const addMantenimiento = async (data) => {
-  const response = await axiosInstance.post('/mantenimientos', data);
-  return response.data;
+export const registrarMantenimiento = async (data) => {
+  return (await api.post('/mantenimientos', data)).data;
 };

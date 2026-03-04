@@ -1,54 +1,123 @@
 import React from 'react';
 
-export default function MotoCard({ moto, progreso, onUpdateKm }) {
-  return (
-    <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2.5rem] hover:border-blue-500/40 transition-all duration-500 group animate-fade-in-up shadow-2xl">
-      {/* Header de la Card */}
-      <div className="flex justify-between items-start mb-8">
-        <div>
-          <span className="text-blue-500 font-mono text-[10px] font-black tracking-[0.3em] uppercase">Placa</span>
-          <h3 className="text-3xl font-black text-white italic tracking-tighter">{moto.placa}</h3>
-          <p className="text-slate-500 text-xs font-bold uppercase mt-1">{moto.marca} {moto.modelo}</p>
+export default function MotoCard({ moto, onUpdateKm, onResetServicio }) {
+  
+  // Configuración de límites para mantenimientos por Kilometraje
+  const CONFIG_KM = [
+    { tipo: "Aceite", limite: 5000, color: "blue" },
+    { tipo: "Frenos", limite: 8000, color: "orange" },
+    { tipo: "Kit Arrastre", limite: 15000, color: "purple" }
+  ];
+
+  // Configuración para documentos legales (Días)
+  const CONFIG_FECHA = [
+    { tipo: "SOAT", duracion: 365 },
+    { tipo: "Tecnomecánica", duracion: 365 }
+  ];
+
+  const renderBarraProgreso = (tipo, limite, colorBase) => {
+    const servicios = moto.mantenimientos || [];
+    const ultServicio = [...servicios]
+      .filter(m => m.tipo === tipo)
+      .sort((a, b) => b.km_momento_servicio - a.km_momento_servicio)[0];
+
+    const kmBase = ultServicio ? ultServicio.km_momento_servicio : 0;
+    const recorrido = moto.kilometraje_actual - kmBase;
+    const pct = Math.min(Math.max((recorrido / limite) * 100, 0), 100);
+    const esCritico = pct > 85;
+
+    return (
+      <div key={tipo} className="group">
+        <div className="flex justify-between text-[10px] mb-1 font-black uppercase tracking-tighter">
+          <span className="text-slate-400 group-hover:text-white transition-colors">{tipo}</span>
+          <span className={esCritico ? "text-red-500 animate-pulse" : `text-${colorBase}-400`}>
+            {Math.round(pct)}%
+          </span>
         </div>
-        <div className="bg-slate-800 p-3 rounded-2xl group-hover:bg-blue-600/20 transition-colors">
-          <span className="text-2xl">🏍️</span>
+        <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-white/5">
+          <div 
+            className={`h-full transition-all duration-1000 ${esCritico ? 'bg-red-500' : `bg-${colorBase}-600`}`}
+            style={{ width: `${pct}%` }}
+          ></div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderEstadoDocumento = (tipo, duracion) => {
+    const servicios = moto.mantenimientos || [];
+    const ultReg = [...servicios]
+      .filter(m => m.tipo === tipo)
+      .sort((a, b) => new Date(b.fecha_servicio) - new Date(a.fecha_servicio))[0];
+
+    if (!ultReg) return (
+      <div key={tipo} className="text-[9px] text-yellow-500/50 font-bold uppercase italic">⚠️ Sin registro de {tipo}</div>
+    );
+
+    const fechaVencimiento = new Date(ultReg.fecha_servicio);
+    fechaVencimiento.setDate(fechaVencimiento.getDate() + duracion);
+    
+    const hoy = new Date();
+    const diasRestantes = Math.ceil((fechaVencimiento - hoy) / (1000 * 60 * 60 * 24));
+    const esCritico = diasRestantes <= 15;
+
+    return (
+      <div key={tipo} className="flex justify-between items-center bg-slate-950/50 p-2 rounded-lg border border-white/5">
+        <span className="text-[10px] text-slate-400 font-black uppercase">{tipo}</span>
+        <span className={`text-[10px] font-mono ${esCritico ? 'text-red-500 font-black' : 'text-green-500'}`}>
+          {diasRestantes > 0 ? `Vence en ${diasRestantes}d` : 'VENCIDO'}
+        </span>
+      </div>
+    );
+  };
+
+  return (
+    <div className="bg-slate-900 border border-slate-800 p-6 rounded-[2.5rem] shadow-2xl hover:border-blue-500/30 transition-all group/card">
+      {/* Header: Placa y Acciones Rápidas */}
+      <div className="flex justify-between items-start mb-6">
+        <div>
+          <p className="text-blue-500 font-black text-[10px] uppercase tracking-[0.3em]">Machine ID</p>
+          <h3 className="text-3xl font-black text-white italic tracking-tighter group-hover/card:text-blue-400 transition-colors">
+            {moto.placa}
+          </h3>
+        </div>
+        <div className="flex gap-2">
+          <button 
+            onClick={() => onResetServicio(moto, "Aceite")}
+            className="bg-slate-800 text-slate-400 p-2 rounded-xl hover:bg-blue-600 hover:text-white transition-all shadow-lg"
+            title="Registrar Mantenimiento"
+          >
+            🛠️
+          </button>
         </div>
       </div>
 
-      {/* Barra de Progreso Inteligente */}
-      <div className="space-y-4">
-        <div>
-          <div className="flex justify-between text-[10px] mb-2 font-black uppercase tracking-widest">
-            <span className="text-slate-400">Vida útil Aceite</span>
-            <span className={progreso > 85 ? "text-red-500" : "text-blue-400"}>
-              {progreso}%
-            </span>
-          </div>
-          <div className="w-full bg-slate-950 h-3 rounded-full overflow-hidden border border-slate-800 p-[2px]">
-            <div 
-              className={`h-full rounded-full transition-all duration-1000 ease-out ${
-                progreso > 85 ? 'bg-gradient-to-r from-red-600 to-orange-500' : 'bg-gradient-to-r from-blue-600 to-cyan-400'
-              }`}
-              style={{ width: `${progreso}%` }}
-            ></div>
-          </div>
+      <div className="space-y-6">
+        {/* Sección de Kilometraje (Barras) */}
+        <div className="space-y-3">
+          <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest border-b border-white/5 pb-1">Estado de Componentes</p>
+          {CONFIG_KM.map(item => renderBarraProgreso(item.tipo, item.limite, item.color))}
         </div>
 
-        {/* Footer de la Card */}
-        <div className="pt-6 border-t border-slate-800/50 flex justify-between items-center">
+        {/* Sección de Documentos Legales */}
+        <div className="space-y-2">
+          <p className="text-[9px] text-slate-500 font-black uppercase tracking-widest border-b border-white/5 pb-1">Documentación Legal</p>
+          {CONFIG_FECHA.map(doc => renderEstadoDocumento(doc.tipo, doc.duracion))}
+        </div>
+
+        {/* Footer: Odometer y Update */}
+        <div className="pt-4 border-t border-slate-800 flex justify-between items-center">
           <div>
-            <p className="text-slate-500 text-[10px] uppercase font-black">Odometer</p>
-            <p className="text-xl font-mono font-black text-white tracking-tighter">
-              {moto.kilometraje_actual.toLocaleString()} <span className="text-[10px] text-slate-500">KM</span>
+            <p className="text-slate-500 text-[10px] uppercase font-black tracking-tighter">Total Odometer</p>
+            <p className="text-2xl font-mono font-black text-white italic">
+              {moto.kilometraje_actual.toLocaleString()} <span className="text-[10px] text-blue-500">KM</span>
             </p>
           </div>
           <button 
             onClick={() => onUpdateKm(moto.id, moto.kilometraje_actual)}
-            className="bg-slate-800 hover:bg-blue-600 text-white p-3 rounded-xl transition-all active:scale-90"
+            className="p-3 bg-blue-600/10 text-blue-500 rounded-2xl hover:bg-blue-600 hover:text-white transition-all active:scale-90"
           >
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-              <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z" />
-            </svg>
+            ✏️
           </button>
         </div>
       </div>

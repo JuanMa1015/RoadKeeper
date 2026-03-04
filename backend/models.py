@@ -19,17 +19,14 @@ class Moto(Base):
     kilometraje_actual = Column(Float, default=0)
     user_id = Column(Integer, ForeignKey("users.id"))
 
-    # Relación: Una moto tiene muchos mantenimientos
     mantenimientos = relationship("Mantenimiento", back_populates="moto")
 
 class Mantenimiento(Base):
     __tablename__ = "mantenimientos"
-
     id = Column(Integer, primary_key=True, index=True)
-    tipo = Column(String)  # "Aceite", "Filtro", "Llantas"
+    tipo = Column(String)  # "Aceite", "SOAT", "Tecnomecánica", etc.
     km_momento_servicio = Column(Integer) 
-    fecha = Column(DateTime, default=datetime.utcnow)
+    fecha = Column(DateTime, default=datetime.utcnow) # <--- EL NOMBRE ES 'fecha'
     moto_id = Column(Integer, ForeignKey("motos.id"))
 
-    # Relación: El mantenimiento pertenece a una moto
     moto = relationship("Moto", back_populates="mantenimientos")

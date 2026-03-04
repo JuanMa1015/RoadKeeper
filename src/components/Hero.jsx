@@ -19,7 +19,7 @@ export default function Hero() {
         
         <div className="flex flex-col sm:flex-row gap-4 justify-center md:justify-start">
           <button 
-            onClick={() => navigate('/login')} // <-- CORREGIDO: minúsculas
+            onClick={() => navigate('/login')} 
             className="bg-blue-600 hover:bg-blue-700 text-white px-10 py-4 rounded-2xl font-black text-lg transition-all shadow-2xl shadow-blue-900/40 active:scale-95"
           >
             EMPEZAR AHORA
