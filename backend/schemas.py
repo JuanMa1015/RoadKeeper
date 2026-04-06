@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import datetime, date
-from typing import List, Optional
+from typing import List, Optional, Literal
 
 # --- SCHEMAS DE USUARIO ---
 class UserBase(BaseModel):
@@ -14,6 +14,21 @@ class UserResponse(UserBase):
     id: int
     class Config:
         from_attributes = True
+
+
+class UserMeResponse(UserBase):
+    id: int
+    two_factor_enabled: bool
+
+    class Config:
+        from_attributes = True
+
+
+class ProfileUpdateRequest(BaseModel):
+    new_username: Optional[str] = None
+    new_email: Optional[EmailStr] = None
+    current_password: Optional[str] = None
+    two_factor_code: Optional[str] = None
 
 # --- SCHEMAS DE MANTENIMIENTO ---
 class MantenimientoBase(BaseModel):
@@ -57,6 +72,39 @@ class NotificationResponse(BaseModel):
     placa: str
     mensaje: str
     prioridad: str
+
+    class Config:
+        from_attributes = True
+
+
+class RecordatorioBase(BaseModel):
+    tipo: Literal["revisiones", "documentos"]
+    titulo: str
+    moto_id: int
+    fecha_vencimiento: date
+    descripcion: Optional[str] = None
+
+
+class RecordatorioCreate(RecordatorioBase):
+    pass
+
+
+class RecordatorioUpdate(BaseModel):
+    tipo: Literal["revisiones", "documentos"]
+    titulo: str
+    moto_id: int
+    fecha_vencimiento: date
+    descripcion: Optional[str] = None
+
+
+class RecordatorioResponse(BaseModel):
+    id: int
+    tipo: Literal["revisiones", "documentos"]
+    titulo: str
+    moto_id: int
+    moto_nombre: str
+    fecha_vencimiento: date
+    descripcion: Optional[str] = None
 
     class Config:
         from_attributes = True

@@ -9,6 +9,10 @@ class User(Base):
     username = Column(String, unique=True, index=True)
     email = Column(String, unique=True, index=True)
     hashed_password = Column(String)
+    totp_secret = Column(String, nullable=True, default=None)
+    two_factor_enabled = Column(Integer, default=0)  # SQLite: usa INTEGER para boolean
+
+    recordatorios = relationship("Recordatorio", back_populates="user", cascade="all, delete-orphan")
 
 class Moto(Base):
     __tablename__ = "motos"
@@ -20,6 +24,7 @@ class Moto(Base):
     user_id = Column(Integer, ForeignKey("users.id"))
 
     mantenimientos = relationship("Mantenimiento", back_populates="moto")
+    recordatorios = relationship("Recordatorio", back_populates="moto", cascade="all, delete-orphan")
 
 class Mantenimiento(Base):
     __tablename__ = "mantenimientos"
@@ -30,3 +35,17 @@ class Mantenimiento(Base):
     moto_id = Column(Integer, ForeignKey("motos.id"))
 
     moto = relationship("Moto", back_populates="mantenimientos")
+
+
+class Recordatorio(Base):
+    __tablename__ = "recordatorios"
+    id = Column(Integer, primary_key=True, index=True)
+    tipo = Column(String, nullable=False)  # revisiones | documentos
+    titulo = Column(String, nullable=False)
+    fecha_vencimiento = Column(DateTime, nullable=False)
+    descripcion = Column(String, nullable=True)
+    moto_id = Column(Integer, ForeignKey("motos.id"), nullable=False)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+
+    moto = relationship("Moto", back_populates="recordatorios")
+    user = relationship("User", back_populates="recordatorios")
