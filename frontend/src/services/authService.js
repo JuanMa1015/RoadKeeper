@@ -1,25 +1,17 @@
 import axios from 'axios';
+import api from '../api/axios';
 
 const API_URL = 'http://localhost:8000';
 
 export const registerUser = async (userData) => {
-    try {
-        // 1. Limpiamos el objeto: enviamos solo lo que schemas.py espera
-        const cleanData = {
-            username: userData.username,
-            email: userData.email,
-            password: userData.password
-        };
+    const cleanData = {
+        username: userData.username,
+        email: userData.email,
+        password: userData.password,
+    };
 
-        // 2. Usamos axios directamente para evitar errores de la instancia 'api'
-        const response = await axios.post(`${API_URL}/register`, cleanData);
-        console.log("Registro exitoso:", response.data);
-        return response.data;
-    } catch (error) {
-        console.error("Error capturado en el servicio:", error.response?.data);
-        // Devolvemos un mensaje claro para el frontend
-        throw error.response?.data?.detail || "Error en el registro";
-    }
+    const response = await axios.post(`${API_URL}/auth/register`, cleanData);
+    return response.data;
 };
 
 export const loginUser = async (username, password) => {
@@ -27,7 +19,7 @@ export const loginUser = async (username, password) => {
     params.append('username', username);
     params.append('password', password);
 
-    const response = await axios.post(`${API_URL}/token`, params, {
+    const response = await axios.post(`${API_URL}/auth/login`, params, {
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded'
         }
@@ -52,7 +44,7 @@ export const verify2FA = async (code) => {
         throw new Error("Sesión de 2FA expirada. Por favor, inicia sesión nuevamente.");
     }
 
-    const response = await axios.post(`${API_URL}/api/auth/2fa/login-verify`, {
+    const response = await axios.post(`${API_URL}/auth/2fa/login-verify`, {
         temp_token: tempToken,
         code: code
     });
@@ -65,38 +57,47 @@ export const verify2FA = async (code) => {
 };
 
 export const setup2FA = async () => {
-    const token = localStorage.getItem('token');
-    const response = await axios.get(`${API_URL}/api/auth/2fa/setup`, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
-    });
+    const response = await api.get('/auth/2fa/setup');
     return response.data;
 };
 
 export const verify2FASetup = async (totpSecret, code) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/auth/2fa/verify-setup`, {
+    const response = await api.post('/auth/2fa/verify-setup', {
         totp_secret: totpSecret,
         code: code
-    }, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
     });
     return response.data;
 };
 
 export const disable2FA = async (code) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post(`${API_URL}/api/auth/2fa/disable`, {
-        temp_token: token,
-        code: code
-    }, {
-        headers: {
-            'Authorization': `Bearer ${token}`
-        }
+    const response = await api.post('/auth/2fa/disable', { code });
+    return response.data;
+};
+
+export const getCurrentUser = async () => {
+    const response = await api.get('/auth/me');
+    return response.data;
+};
+
+export const updateProfile = async ({ newUsername, newEmail, currentPassword, twoFactorCode }) => {
+    const response = await api.put('/auth/profile', {
+        new_username: newUsername || null,
+        new_email: newEmail || null,
+        current_password: currentPassword || null,
+        two_factor_code: twoFactorCode || null,
     });
     return response.data;
 };
 
+export const forgotPassword = async (email) => {
+    const response = await api.post('/auth/forgot-password', { email });
+    return response.data;
+};
+
+export const resetPassword = async (resetToken, newPassword) => {
+    const response = await api.post('/auth/reset-password', {
+        reset_token: resetToken,
+        new_password: newPassword,
+    });
+    return response.data;
+};

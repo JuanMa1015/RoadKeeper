@@ -7,6 +7,10 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 import Mantenimientos from './pages/Mantenimientos';
 import AddMoto from './pages/AddMoto';
+import Recordatorios from './pages/Recordatorios';
+import ForgotPassword from './pages/ForgotPassword';
+import Configuracion from './pages/Configuracion';
+import Verify2FA from './pages/Verify2FA';
 
 function App() {
   return (
@@ -20,6 +24,7 @@ function App() {
             <Route path="/login" element={<Login />} /> 
             <Route path="/registro" element={<Register />} />
             <Route path="/mantenimientos" element={<Mantenimientos />} />
+            <Route path="/recordatorios" element={<Recordatorios />} />
             <Route path="/add-moto" element={<AddMoto />} />
             
             {/* Ruta de seguridad por si el usuario escribe cualquier cosa mal */}
@@ -34,3 +39,6 @@ function App() {
 }
 
 export default App;
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/configuracion" element={<Configuracion />} />
+            <Route path="/verify-2fa" element={<Verify2FA />} />

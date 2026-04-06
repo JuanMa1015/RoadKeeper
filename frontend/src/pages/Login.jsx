@@ -14,11 +14,19 @@ export default function Login() {
         setLoading(true);
 
         try {
-            await loginUser(username, password);
+            const response = await loginUser(username, password);
+            
+            // Si requiere 2FA, redirigir a la página de verificación
+            if (response.requires_2fa) {
+                navigate('/verify-2fa');
+                return;
+            }
+            
+            // Si no requiere 2FA, ir al garaje
             navigate('/mantenimientos');
         } catch (err) {
             // CORRECCIÓN: Extraer el string del error
-            const errorMsg = err.response?.data?.detail || "Error al conectar con el servidor";
+            const errorMsg = err.response?.data?.detail || err.message || "Error al conectar con el servidor";
             setError(errorMsg);
         } finally {
             setLoading(false);
@@ -80,8 +88,13 @@ export default function Login() {
                     <Link to="/registro" className="text-xs font-bold text-slate-500 hover:text-blue-400 uppercase tracking-widest transition-colors">
                         ¿No tienes cuenta? <span className="text-blue-500 underline">Regístrate</span>
                     </Link>
+                    <br />
+                    <Link to="/forgot-password" className="text-xs font-bold text-slate-500 hover:text-amber-400 uppercase tracking-widest transition-colors mt-3 inline-block">
+                        ¿Olvidaste tu contraseña?
+                    </Link>
                 </div>
             </div>
         </div>
     );
 }
+

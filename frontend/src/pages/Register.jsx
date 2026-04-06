@@ -30,7 +30,7 @@ export default function Register() {
       console.log("¡Registrado en Neon con éxito!");
       navigate('/login');
     } catch (err) {
-      setError(err); // Aquí se mostrará el error si el usuario ya existe
+      setError(err?.response?.data?.detail || err?.message || err || 'Error al registrar');
     } finally {
       setLoading(false);
     }

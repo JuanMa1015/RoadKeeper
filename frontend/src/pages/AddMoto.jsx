@@ -1,9 +1,88 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createMoto } from '../services/motoService';
 import { MARCAS_MODELOS } from '../constants/motoData';
 
+function CalendarField({ label, value, onChange, max }) {
+  const inputId = `date-${label.toLowerCase().replace(/\s+/g, '-')}`;
+  const inputRef = useRef(null);
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) {
+      return 'Sin fecha seleccionada';
+    }
+    const [year, month, day] = dateStr.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
+  const getEstimatedExpiry = (dateStr) => {
+    if (!dateStr) {
+      return '';
+    }
+
+    const source = new Date(`${dateStr}T00:00:00`);
+    const expiry = new Date(source);
+    expiry.setFullYear(expiry.getFullYear() + 1);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const diffDays = Math.floor((expiry.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+
+    const expiryText = formatDate(expiry.toISOString().slice(0, 10));
+    if (diffDays >= 0) {
+      return `Vencimiento estimado: ${expiryText} (${diffDays} días restantes)`;
+    }
+    return `Vencimiento estimado: ${expiryText} (vencido hace ${Math.abs(diffDays)} días)`;
+  };
+
+  const openNativeDatePicker = () => {
+    const input = inputRef.current;
+    if (!input) {
+      return;
+    }
+
+    // Chromium browsers support showPicker; fallback keeps native behavior.
+    if (typeof input.showPicker === 'function') {
+      input.showPicker();
+    }
+  };
+
+  return (
+    <div className="space-y-3">
+      <label className="block text-slate-500 text-[10px] font-black uppercase tracking-widest">{label}</label>
+
+      <input
+        ref={inputRef}
+        id={inputId}
+        type="date"
+        max={max}
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        onFocus={openNativeDatePicker}
+        onClick={openNativeDatePicker}
+        className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white outline-none text-sm cursor-pointer"
+      />
+
+      <div className="flex items-center justify-between text-xs">
+        <p className="text-slate-400">{value ? getEstimatedExpiry(value) : 'Selecciona una fecha para calcular vencimiento estimado'}</p>
+        {value && (
+          <button
+            type="button"
+            onClick={() => onChange('')}
+            className="text-amber-300 hover:text-amber-200 font-bold"
+          >
+            Limpiar
+          </button>
+        )}
+      </div>
+
+      {value && <p className="text-[11px] text-slate-500">Registrada: {formatDate(value)}</p>}
+    </div>
+  );
+}
+
 export default function AddMoto() {
+  const today = new Date().toISOString().split('T')[0];
   const [formData, setFormData] = useState({
     placa: '', marca: '', modelo: '', kilometraje_actual: 0,
     fecha_soat: '', fecha_tecno: ''
@@ -103,24 +182,21 @@ export default function AddMoto() {
           />
         </div>
 
-        {/* Nuevos campos para Documentos Legales */}
+        {/* Fechas con selector de calendario y vista previa */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-800">
-          <div>
-            <label className="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Última Fecha SOAT</label>
-            <input
-              type="date"
-              className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white outline-none text-xs"
-              onChange={(e) => setFormData({ ...formData, fecha_soat: e.target.value })}
-            />
-          </div>
-          <div>
-            <label className="block text-slate-500 text-[10px] font-black uppercase tracking-widest mb-2">Última Fecha Tecno</label>
-            <input
-              type="date"
-              className="w-full bg-slate-950 border border-slate-800 p-4 rounded-xl text-white outline-none text-xs"
-              onChange={(e) => setFormData({ ...formData, fecha_tecno: e.target.value })}
-            />
-          </div>
+          <CalendarField
+            label="Última Fecha SOAT"
+            value={formData.fecha_soat}
+            max={today}
+            onChange={(value) => setFormData({ ...formData, fecha_soat: value })}
+          />
+
+          <CalendarField
+            label="Última Fecha Tecno"
+            value={formData.fecha_tecno}
+            max={today}
+            onChange={(value) => setFormData({ ...formData, fecha_tecno: value })}
+          />
         </div>
 
         <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-black py-4 rounded-2xl transition-all shadow-xl shadow-blue-900/20">
