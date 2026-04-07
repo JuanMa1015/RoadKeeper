@@ -1,9 +1,10 @@
 """
 Router de gestión de mantenimientos.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List
+from datetime import datetime, date
 
 from database import SessionLocal
 import models
@@ -39,7 +40,7 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
 def create_mantenimiento(
     mantenimiento: schemas.MantenimientoCreate,
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Crea un nuevo registro de mantenimiento"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -55,8 +56,40 @@ def create_mantenimiento(
     if mantenimiento.km_momento_servicio > moto.kilometraje_actual:
         moto.kilometraje_actual = mantenimiento.km_momento_servicio
 
-    nuevo_reg = models.Mantenimiento(**mantenimiento.dict())
+    fecha_raw = mantenimiento.fecha_servicio
+    fecha_dt = datetime.combine(fecha_raw, datetime.min.time()) if fecha_raw else None
+
+    nuevo_reg = models.Mantenimiento(
+        tipo=mantenimiento.tipo,
+        km_momento_servicio=mantenimiento.km_momento_servicio,
+        fecha=fecha_dt,
+        moto_id=mantenimiento.moto_id,
+    )
     db.add(nuevo_reg)
+
+    if mantenimiento.tipo in ["SOAT", "Tecnomecánica"] and fecha_dt:
+        titulo = f"{mantenimiento.tipo} ({moto.placa})"
+        descripcion = f"Vencimiento de {mantenimiento.tipo} para la moto {moto.placa}."
+        existente = db.query(models.Recordatorio).filter(
+            models.Recordatorio.user_id == current_user.id,
+            models.Recordatorio.moto_id == moto.id,
+            models.Recordatorio.tipo == "documentos",
+            models.Recordatorio.titulo == titulo,
+        ).first()
+
+        if existente:
+            existente.fecha_vencimiento = fecha_dt
+            existente.descripcion = descripcion
+        else:
+            db.add(models.Recordatorio(
+                tipo="documentos",
+                titulo=titulo,
+                fecha_vencimiento=fecha_dt,
+                descripcion=descripcion,
+                moto_id=moto.id,
+                user_id=current_user.id,
+            ))
+
     db.commit()
     db.refresh(nuevo_reg)
     return nuevo_reg
@@ -64,10 +97,10 @@ def create_mantenimiento(
 @router.get("/notificaciones", response_model=List[schemas.NotificationResponse])
 def get_notificaciones(
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Obtiene alertas de mantenimiento vencidos o próximos a vencer"""
-    from datetime import datetime, timedelta, date
+    from datetime import datetime
     from sqlalchemy.orm import joinedload
     
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -93,18 +126,26 @@ def get_notificaciones(
                 "prioridad": "ALTA" if recorrido >= 5000 else "MEDIA"
             })
 
-        # Alertas por Fecha
+        # Alertas por Fecha de vencimiento (fecha guardada para SOAT/Tecnomecánica)
         for tipo in ["SOAT", "Tecnomecánica"]:
             mants_tipo = [m.fecha.date() for m in moto.mantenimientos if m.tipo == tipo and m.fecha]
             ult_doc = max(mants_tipo, default=None)
             if ult_doc:
-                vencimiento = ult_doc + timedelta(days=365)
-                dias_restantes = (vencimiento - hoy).days
+                dias_restantes = (ult_doc - hoy).days
                 if dias_restantes <= 15:
+                    if dias_restantes < 0:
+                        mensaje = f"{tipo} VENCIDO"
+                    elif dias_restantes == 0:
+                        mensaje = f"{tipo} vence hoy"
+                    elif dias_restantes == 1:
+                        mensaje = f"{tipo} vence mañana"
+                    else:
+                        mensaje = f"{tipo} vence en {dias_restantes} días"
+
                     alertas.append({
                         "moto_id": moto.id,
                         "placa": moto.placa,
-                        "mensaje": f"{tipo} vence en {dias_restantes} días" if dias_restantes > 0 else f"{tipo} VENCIDO",
+                        "mensaje": mensaje,
                         "prioridad": "ALTA" if dias_restantes <= 5 else "MEDIA"
                     })
     

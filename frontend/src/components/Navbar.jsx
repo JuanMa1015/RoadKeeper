@@ -1,15 +1,29 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 
+function SettingsIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="h-4.5 w-4.5" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 6h16" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 12h16" />
+      <path strokeLinecap="round" strokeLinejoin="round" d="M4 18h16" />
+      <circle cx="9" cy="6" r="2" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="12" r="2" fill="currentColor" stroke="none" />
+      <circle cx="11" cy="18" r="2" fill="currentColor" stroke="none" />
+    </svg>
+  );
+}
+
 const navigationItems = [
   { label: 'Inicio', to: '/' },
   { label: 'Recordatorios', to: '/recordatorios' },
   { label: 'Mantenimientos', to: '/mantenimientos' },
+  { label: 'Pico y Placa', to: '/pico-placa' },
   { label: 'Reportes', to: '/reportes' },
 ];
 
 const parseTokenData = () => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (!token) {
     return { isAuthenticated: false, username: '' };
   }
@@ -20,7 +34,7 @@ const parseTokenData = () => {
     const payload = JSON.parse(atob(padded));
 
     if (payload.exp && Date.now() >= payload.exp * 1000) {
-      localStorage.removeItem('token');
+      sessionStorage.removeItem('token');
       sessionStorage.removeItem('temp_token');
       return { isAuthenticated: false, username: '' };
     }
@@ -30,7 +44,7 @@ const parseTokenData = () => {
       username: payload.sub || 'Usuario',
     };
   } catch {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('temp_token');
     return { isAuthenticated: false, username: '' };
   }
@@ -52,7 +66,7 @@ export default function Navbar() {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('temp_token');
     setAuth({ isAuthenticated: false, username: '' });
     navigate('/login');
@@ -80,10 +94,12 @@ export default function Navbar() {
             <div className="flex items-center gap-3 pl-3 border-l border-slate-700">
               <Link
                 to="/configuracion"
-                className="h-10 w-10 rounded-full border border-slate-700 bg-slate-900 text-slate-300 hover:text-white hover:border-slate-500 transition-all inline-flex items-center justify-center"
+                className="group h-10 w-10 rounded-xl border border-slate-700/80 bg-gradient-to-b from-slate-900 to-slate-950 text-slate-300 hover:text-blue-200 hover:border-blue-500/60 hover:shadow-[0_0_0_1px_rgba(59,130,246,0.2)] transition-all inline-flex items-center justify-center"
                 title="Configuración y Seguridad"
               >
-                ⚙️
+                <span className="transition-transform duration-200 group-hover:scale-110">
+                  <SettingsIcon />
+                </span>
               </Link>
 
               <div className="px-4 py-2 rounded-full bg-slate-900 border border-slate-700 text-slate-200 text-sm font-semibold max-w-[180px] truncate">

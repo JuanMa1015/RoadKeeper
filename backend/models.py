@@ -13,6 +13,7 @@ class User(Base):
     two_factor_enabled = Column(Integer, default=0)  # SQLite: usa INTEGER para boolean
 
     recordatorios = relationship("Recordatorio", back_populates="user", cascade="all, delete-orphan")
+    notification_deliveries = relationship("NotificationDelivery", back_populates="user", cascade="all, delete-orphan")
 
 class Moto(Base):
     __tablename__ = "motos"
@@ -49,3 +50,18 @@ class Recordatorio(Base):
 
     moto = relationship("Moto", back_populates="recordatorios")
     user = relationship("User", back_populates="recordatorios")
+
+
+class NotificationDelivery(Base):
+    __tablename__ = "notification_deliveries"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    moto_id = Column(Integer, ForeignKey("motos.id"), nullable=True)
+    channel = Column(String, nullable=False)  # email | push
+    event_key = Column(String, nullable=False)  # key lógico del evento
+    sent_on = Column(String, nullable=False)  # YYYY-MM-DD para deduplicar diario
+    message = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="notification_deliveries")

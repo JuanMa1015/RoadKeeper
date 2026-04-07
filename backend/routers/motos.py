@@ -1,7 +1,7 @@
 """
 Router de gestión de motos.
 """
-from fastapi import APIRouter, Depends, HTTPException, status, Body
+from fastapi import APIRouter, Body, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from typing import List
 
@@ -41,7 +41,7 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
 @router.get("/", response_model=List[schemas.MotoResponse])
 def get_motos(
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Obtiene las motos del usuario autenticado"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -55,7 +55,7 @@ def get_motos(
 def create_moto(
     moto: schemas.MotoCreate,
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Crea una nueva moto para el usuario autenticado"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -90,7 +90,7 @@ def update_kilometraje(
     moto_id: int,
     kilometraje_actual: int = Body(..., embed=True),
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Actualiza el kilometraje actual de una moto"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)

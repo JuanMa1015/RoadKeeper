@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useRecordatorios } from '../hooks/useRecordatorios';
 
 const TAB_OPTIONS = [
@@ -106,6 +107,8 @@ function SkeletonLoader() {
 
 export default function Recordatorios() {
   const [activeTab, setActiveTab] = useState('todos');
+  const [selectedRecordatorio, setSelectedRecordatorio] = useState(null);
+  const navigate = useNavigate();
   const { recordatorios, loading, error, refetch } = useRecordatorios();
 
   const withMeta = useMemo(() => {
@@ -141,10 +144,19 @@ export default function Recordatorios() {
   }, [activeTab, withMeta]);
 
   return (
-    <section className="space-y-6 text-slate-100">
-      <header>
-        <h1 className="text-3xl md:text-4xl font-black tracking-tight">Recordatorios</h1>
-        <p className="text-slate-400 mt-2">Controla revisiones y documentación legal de tus motos en un solo tablero.</p>
+    <section className="space-y-5 text-slate-100">
+      <header className="rounded-3xl border border-slate-700 bg-slate-800/35 p-5 md:p-6 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-4">
+        <div>
+          <p className="text-[10px] uppercase tracking-[0.3em] text-slate-500 font-black">Recordatorios</p>
+          <h1 className="text-3xl md:text-4xl font-black tracking-tight mt-1">Alertas compactas</h1>
+          <p className="text-slate-400 mt-2 max-w-2xl">Revisiones y documentos legales en una vista liviana. Abre el detalle solo cuando lo necesites.</p>
+        </div>
+        <button
+          onClick={() => navigate('/mantenimientos')}
+          className="self-start lg:self-auto px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition"
+        >
+          Ir al garaje
+        </button>
       </header>
 
       {loading ? (
@@ -162,22 +174,22 @@ export default function Recordatorios() {
         </div>
       ) : (
         <>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <article className="rounded-2xl border border-red-500/30 bg-red-500/10 p-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <article className="rounded-2xl border border-red-500/30 bg-red-500/10 p-4">
               <p className="text-red-200 text-sm">Vencidos / urgentes</p>
-              <p className="text-3xl font-black text-red-300 mt-2">{metrics.rojo}</p>
+              <p className="text-2xl font-black text-red-300 mt-1">{metrics.rojo}</p>
             </article>
-            <article className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-5">
+            <article className="rounded-2xl border border-amber-400/30 bg-amber-400/10 p-4">
               <p className="text-amber-100 text-sm">Próximos a vencer</p>
-              <p className="text-3xl font-black text-amber-300 mt-2">{metrics.amarillo}</p>
+              <p className="text-2xl font-black text-amber-300 mt-1">{metrics.amarillo}</p>
             </article>
-            <article className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-5">
+            <article className="rounded-2xl border border-emerald-500/30 bg-emerald-500/10 p-4">
               <p className="text-emerald-100 text-sm">Al día</p>
-              <p className="text-3xl font-black text-emerald-300 mt-2">{metrics.verde}</p>
+              <p className="text-2xl font-black text-emerald-300 mt-1">{metrics.verde}</p>
             </article>
           </div>
 
-          <div className="flex flex-wrap gap-2 rounded-2xl bg-slate-800/60 p-2 border border-slate-700">
+          <div className="flex flex-wrap gap-2 rounded-2xl bg-slate-800/55 p-2 border border-slate-700">
             {TAB_OPTIONS.map((tab) => {
               const isActive = activeTab === tab.id;
               return (
@@ -195,62 +207,123 @@ export default function Recordatorios() {
           </div>
 
           {filteredRecordatorios.length === 0 ? (
-            <div className="rounded-2xl border border-slate-700 bg-slate-800/50 p-8 text-center">
+            <div className="rounded-2xl border border-slate-700 bg-slate-800/45 p-8 text-center">
               <p className="text-slate-200 font-semibold">No hay recordatorios para este filtro.</p>
-              <p className="text-slate-400 text-sm mt-1">Crea recordatorios de revisiones o documentos para verlos aquí.</p>
+              <p className="text-slate-400 text-sm mt-1">Los de documentos se generan automáticamente cuando registras SOAT o Tecnomecánica con fecha de vencimiento.</p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 xl:grid-cols-2 gap-3">
               {filteredRecordatorios.map((recordatorio) => {
                 const category = CATEGORY_STYLES[recordatorio.tipo] || CATEGORY_STYLES.revisiones;
                 return (
                   <article
                     key={recordatorio.id}
-                    className={`rounded-2xl border border-slate-700 bg-slate-800/70 p-5 border-l-4 ${recordatorio.urgencia.borderColor}`}
+                    className={`rounded-2xl border border-slate-700 bg-slate-800/65 p-4 md:p-4 border-l-4 ${recordatorio.urgencia.borderColor}`}
                   >
                     <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-2 text-slate-100">
+                      <div className="flex items-center gap-3 min-w-0 flex-1">
                         <span className="inline-flex items-center justify-center h-9 w-9 rounded-xl bg-slate-700/90">
                           {recordatorio.tipo === 'documentos' ? <DocumentIcon /> : <ToolIcon />}
                         </span>
-                        <div>
-                          <h2 className="font-bold text-lg leading-tight">{recordatorio.titulo}</h2>
-                          <p className="text-slate-400 text-sm">{recordatorio.moto_nombre}</p>
+                        <div className="min-w-0">
+                          <h2 className="font-bold text-base md:text-[15px] leading-tight truncate">{recordatorio.titulo}</h2>
+                          <p className="text-slate-400 text-xs md:text-sm truncate">{recordatorio.moto_nombre}</p>
                         </div>
                       </div>
 
-                      <span className={`text-xs font-semibold px-2.5 py-1 rounded-full border ${category.badge}`}>
+                      <span className={`shrink-0 text-[11px] font-semibold px-2.5 py-1 rounded-full border ${category.badge}`}>
                         {category.label}
                       </span>
                     </div>
 
-                    <div className="mt-4 space-y-2 text-sm">
-                      <p className="text-slate-300">
+                    <div className="mt-3 flex items-center justify-between gap-3 text-sm">
+                      <p className="text-slate-300 text-xs md:text-sm">
                         <span className="text-slate-400">Vencimiento: </span>
                         {formatDateEsCo(recordatorio.fecha_vencimiento)}
                       </p>
 
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 shrink-0">
                         <span className={`h-2.5 w-2.5 rounded-full ${recordatorio.urgencia.dotColor}`} />
-                        <p className={`font-semibold ${recordatorio.urgencia.textColor}`}>{recordatorio.urgencia.label}</p>
+                        <p className={`font-semibold text-xs md:text-sm ${recordatorio.urgencia.textColor}`}>{recordatorio.urgencia.label}</p>
                       </div>
                     </div>
 
-                    <button
-                      onClick={() => {
-                        const detalle = recordatorio.descripcion || 'Sin descripción adicional.';
-                        window.alert(`${recordatorio.titulo}\n\nMoto: ${recordatorio.moto_nombre}\n\n${detalle}`);
-                      }}
-                      className="mt-5 rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 text-sm font-semibold transition"
-                    >
-                      Ver detalles
-                    </button>
+                    <div className="mt-4 flex justify-end">
+                      <button
+                        onClick={() => setSelectedRecordatorio(recordatorio)}
+                        className="rounded-xl bg-slate-700 hover:bg-slate-600 text-slate-100 px-4 py-2 text-sm font-semibold transition"
+                      >
+                        Ver detalles
+                      </button>
+                    </div>
                   </article>
                 );
               })}
             </div>
           )}
         </>
+      )}
+
+      {selectedRecordatorio && (
+        <div
+          className="fixed inset-0 z-[70] bg-slate-950/75 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4"
+          onClick={() => setSelectedRecordatorio(null)}
+        >
+          <div
+            className="w-full sm:max-w-xl rounded-t-3xl sm:rounded-2xl border border-slate-700 bg-slate-900 p-6 space-y-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-xs uppercase tracking-wider text-slate-400">Detalle de recordatorio</p>
+                <h3 className="text-xl font-black text-white mt-1">{selectedRecordatorio.titulo}</h3>
+              </div>
+              <button
+                onClick={() => setSelectedRecordatorio(null)}
+                className="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-sm font-semibold"
+              >
+                Cerrar
+              </button>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+                <p className="text-[11px] uppercase text-slate-500">Moto</p>
+                <p className="text-slate-100 font-semibold mt-1">{selectedRecordatorio.moto_nombre}</p>
+              </div>
+              <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-3">
+                <p className="text-[11px] uppercase text-slate-500">Vencimiento</p>
+                <p className="text-slate-100 font-semibold mt-1">{formatDateEsCo(selectedRecordatorio.fecha_vencimiento)}</p>
+              </div>
+            </div>
+
+            <div className="rounded-xl border border-slate-700 bg-slate-950/60 p-4">
+              <p className="text-[11px] uppercase text-slate-500">Descripción</p>
+              <p className="text-slate-200 mt-2 text-sm leading-relaxed">
+                {selectedRecordatorio.descripcion || 'Sin descripción adicional.'}
+              </p>
+            </div>
+
+            <div className="flex justify-end">
+              <button
+                onClick={() => {
+                  setSelectedRecordatorio(null);
+                  const targetPlaca = selectedRecordatorio.placa || '';
+                  navigate(`/mantenimientos?placa=${encodeURIComponent(targetPlaca)}`);
+                }}
+                className="mr-3 px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-100 text-sm font-semibold"
+              >
+                Ir a mantenimientos
+              </button>
+              <button
+                onClick={() => setSelectedRecordatorio(null)}
+                className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold"
+              >
+                Entendido
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </section>
   );

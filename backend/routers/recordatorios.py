@@ -1,7 +1,7 @@
 """
 Router de gestión de recordatorios categorizados.
 """
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from sqlalchemy.orm import Session, joinedload
 from datetime import datetime
 from typing import List
@@ -36,13 +36,62 @@ def get_current_user(token: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Usuario no encontrado")
     return user
 
+
+def sync_document_recordatorios(current_user: models.User, db: Session):
+    """Sincroniza recordatorios de documentos legales desde mantenimientos SOAT/Tecnomecánica."""
+    motos = db.query(models.Moto)\
+        .options(joinedload(models.Moto.mantenimientos))\
+        .filter(models.Moto.user_id == current_user.id)\
+        .all()
+
+    changed = False
+    for moto in motos:
+        for tipo_doc in ["SOAT", "Tecnomecánica"]:
+            ult_doc = max(
+                [m.fecha for m in moto.mantenimientos if m.tipo == tipo_doc and m.fecha],
+                default=None
+            )
+            if not ult_doc:
+                continue
+
+            titulo = f"{tipo_doc} ({moto.placa})"
+            descripcion = f"Vencimiento de {tipo_doc} para la moto {moto.placa}."
+
+            existente = db.query(models.Recordatorio).filter(
+                models.Recordatorio.user_id == current_user.id,
+                models.Recordatorio.moto_id == moto.id,
+                models.Recordatorio.tipo == "documentos",
+                models.Recordatorio.titulo == titulo,
+            ).first()
+
+            if existente:
+                if existente.fecha_vencimiento != ult_doc or existente.descripcion != descripcion:
+                    existente.fecha_vencimiento = ult_doc
+                    existente.descripcion = descripcion
+                    changed = True
+            else:
+                db.add(models.Recordatorio(
+                    tipo="documentos",
+                    titulo=titulo,
+                    moto_id=moto.id,
+                    fecha_vencimiento=ult_doc,
+                    descripcion=descripcion,
+                    user_id=current_user.id,
+                ))
+                changed = True
+
+    if changed:
+        db.commit()
+
+@router.get("", response_model=List[schemas.RecordatorioResponse], include_in_schema=False)
 @router.get("/", response_model=List[schemas.RecordatorioResponse])
 def get_recordatorios(
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Obtiene recordatorios del usuario autenticado"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
+    sync_document_recordatorios(current_user, db)
     
     recordatorios = db.query(models.Recordatorio)\
         .options(joinedload(models.Recordatorio.moto))\
@@ -58,6 +107,7 @@ def get_recordatorios(
             "tipo": recordatorio.tipo,
             "titulo": recordatorio.titulo,
             "moto_id": recordatorio.moto_id,
+            "placa": recordatorio.moto.placa if recordatorio.moto else None,
             "moto_nombre": moto_nombre,
             "fecha_vencimiento": recordatorio.fecha_vencimiento.date(),
             "descripcion": recordatorio.descripcion,
@@ -68,7 +118,7 @@ def get_recordatorios(
 def create_recordatorio(
     payload: schemas.RecordatorioCreate,
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Crea un nuevo recordatorio"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -99,6 +149,7 @@ def create_recordatorio(
         "tipo": nuevo.tipo,
         "titulo": nuevo.titulo,
         "moto_id": nuevo.moto_id,
+        "placa": moto.placa,
         "moto_nombre": f"{moto.marca} {moto.modelo}",
         "fecha_vencimiento": nuevo.fecha_vencimiento.date(),
         "descripcion": nuevo.descripcion,
@@ -109,7 +160,7 @@ def update_recordatorio(
     recordatorio_id: int,
     payload: schemas.RecordatorioUpdate,
     db: Session = Depends(get_db),
-    authorization: str = None
+    authorization: str = Header(None)
 ):
     """Actualiza un recordatorio existente"""
     current_user = get_current_user(authorization.replace("Bearer ", "") if authorization else "", db)
@@ -144,6 +195,7 @@ def update_recordatorio(
         "tipo": recordatorio.tipo,
         "titulo": recordatorio.titulo,
         "moto_id": recordatorio.moto_id,
+        "placa": moto.placa,
         "moto_nombre": f"{moto.marca} {moto.modelo}",
         "fecha_vencimiento": recordatorio.fecha_vencimiento.date(),
         "descripcion": recordatorio.descripcion,

@@ -16,15 +16,34 @@ const getTokenExpiry = (token) => {
 };
 
 const redirectToLogin = () => {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('temp_token');
     if (window.location.pathname !== '/login') {
         window.location.href = '/login';
     }
 };
 
+const isAuthSessionError = (error) => {
+    if (error?.response?.status !== 401) {
+        return false;
+    }
+
+    const detailRaw = error?.response?.data?.detail;
+    const detail = typeof detailRaw === 'string' ? detailRaw.toLowerCase() : '';
+    const hasBearerChallenge = Boolean(error?.response?.headers?.['www-authenticate']);
+
+    // Only force logout when backend indicates token/session problems.
+    return (
+        hasBearerChallenge ||
+        detail.includes('token') ||
+        detail.includes('expirad') ||
+        detail.includes('no se pudo validar el acceso') ||
+        detail.includes('usuario no encontrado')
+    );
+};
+
 api.interceptors.request.use((config) => {
-    const token = localStorage.getItem('token');
+    const token = sessionStorage.getItem('token');
     if (token) {
         const expiresAt = getTokenExpiry(token);
         if (expiresAt && Date.now() >= expiresAt) {
@@ -42,7 +61,14 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error?.response?.status === 401) {
+        const requestUrl = String(error?.config?.url || '');
+        const isTwoFactorFlow = requestUrl.includes('/auth/2fa/verify-setup') || requestUrl.includes('/auth/2fa/disable');
+
+        if (isTwoFactorFlow) {
+            return Promise.reject(error);
+        }
+
+        if (isAuthSessionError(error)) {
             redirectToLogin();
         }
         return Promise.reject(error);

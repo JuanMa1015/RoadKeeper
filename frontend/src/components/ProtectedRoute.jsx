@@ -12,7 +12,7 @@ const getTokenExpiry = (token) => {
 
 export default function ProtectedRoute({ children }) {
   const location = useLocation();
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
 
   if (!token) {
     return <Navigate to="/login" replace state={{ from: location }} />;
@@ -20,7 +20,7 @@ export default function ProtectedRoute({ children }) {
 
   const expiresAt = getTokenExpiry(token);
   if (expiresAt && Date.now() >= expiresAt) {
-    localStorage.removeItem('token');
+    sessionStorage.removeItem('token');
     sessionStorage.removeItem('temp_token');
     return <Navigate to="/login" replace state={{ from: location, expired: true }} />;
   }

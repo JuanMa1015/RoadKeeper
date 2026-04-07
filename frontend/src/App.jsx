@@ -4,6 +4,7 @@ import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import ProtectedRoute from './components/ProtectedRoute';
 import SessionWatcher from './components/SessionWatcher';
+import NotificationPushWatcher from './components/NotificationPushWatcher';
 import Home from './pages/Home';
 import Login from './pages/Login';
 import Register from './pages/Register';
@@ -15,11 +16,13 @@ import ForgotPassword from './pages/ForgotPassword';
 import ResetPassword from './pages/ResetPassword';
 import Verify2FA from './pages/Verify2FA';
 import Configuracion from './pages/Configuracion';
+import PicoPlaca from './pages/PicoPlaca';
 
 function App() {
   return (
     <Router>
       <SessionWatcher />
+      <NotificationPushWatcher />
       <div className="flex flex-col min-h-screen bg-slate-950 text-white">
         <Navbar />
         
@@ -65,6 +68,14 @@ function App() {
               }
             />
             <Route
+              path="/pico-placa"
+              element={
+                <ProtectedRoute>
+                  <PicoPlaca />
+                </ProtectedRoute>
+              }
+            />
+            <Route
               path="/add-moto"
               element={
                 <ProtectedRoute>
@@ -85,4 +96,6 @@ function App() {
 }
 
 export default App;
+
+// ROADKEEPER - modificado por Copilot 2026-04-06
 

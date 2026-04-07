@@ -17,14 +17,14 @@ export default function SessionWatcher() {
 
   useEffect(() => {
     const checkSession = () => {
-      const token = localStorage.getItem('token');
+      const token = sessionStorage.getItem('token');
       if (!token) {
         return;
       }
 
       const expiresAt = getTokenExpiry(token);
       if (expiresAt && Date.now() >= expiresAt) {
-        localStorage.removeItem('token');
+        sessionStorage.removeItem('token');
         sessionStorage.removeItem('temp_token');
         navigate('/login', { replace: true });
       }

@@ -1,26 +1,28 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 export default function Notifications({ alertas }) {
+  const navigate = useNavigate();
+
   if (alertas.length === 0) return null;
 
+  const total = alertas.length;
+  const criticas = alertas.filter((alerta) => alerta.prioridad === 'ALTA').length;
+  const toneClass = criticas > 0
+    ? 'border-red-500/40 bg-red-500/10 text-red-200 hover:bg-red-500/15'
+    : 'border-amber-400/40 bg-amber-400/10 text-amber-100 hover:bg-amber-400/15';
+
   return (
-    <div className="mb-8 space-y-3">
-      {alertas.map((alerta, index) => (
-        <div 
-          key={index} 
-          className={`p-4 rounded-2xl border flex items-center gap-4 animate-pulse-slow ${
-            alerta.prioridad === 'ALTA' 
-            ? 'bg-red-500/10 border-red-500/50 text-red-500' 
-            : 'bg-yellow-500/10 border-yellow-500/50 text-yellow-500'
-          }`}
-        >
-          <span className="text-xl">{alerta.prioridad === 'ALTA' ? '🚨' : '⚠️'}</span>
-          <div className="flex-1">
-            <p className="text-[10px] font-black uppercase tracking-widest">Alerta de Seguridad</p>
-            <p className="text-sm font-bold">Moto {alerta.placa}: {alerta.mensaje}</p>
-          </div>
-        </div>
-      ))}
+    <div className="mb-6 flex justify-end">
+      <button
+        onClick={() => navigate('/recordatorios')}
+        className={`inline-flex items-center gap-3 rounded-2xl border px-4 py-2.5 shadow-lg shadow-slate-950/20 transition ${toneClass}`}
+        title="Ir a Recordatorios"
+      >
+        <span className={`h-2.5 w-2.5 rounded-full ${criticas > 0 ? 'bg-red-400' : 'bg-amber-300'}`} />
+        <span className="text-[10px] uppercase tracking-[0.3em] font-black text-slate-300/80">Alertas</span>
+        <span className="text-xl font-black leading-none">{total}</span>
+      </button>
     </div>
   );
 }

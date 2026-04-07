@@ -43,7 +43,7 @@ export default function Register() {
       <form onSubmit={handleSubmit} className="space-y-6">
         {error && (
           <div className="p-4 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-2xl uppercase">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 
