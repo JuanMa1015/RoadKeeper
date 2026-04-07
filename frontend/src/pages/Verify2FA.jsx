@@ -84,7 +84,7 @@ export default function Verify2FA() {
         >
           {error && (
             <div className="p-4 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-2xl uppercase">
-              ⚠️ {error}
+              {error}
             </div>
           )}
 
@@ -131,7 +131,7 @@ export default function Verify2FA() {
             onClick={handleCancel}
             className="text-xs font-bold text-slate-500 hover:text-slate-300 uppercase tracking-widest transition-colors"
           >
-            ← Volver al login
+            Volver al login
           </button>
         </div>
       </div>

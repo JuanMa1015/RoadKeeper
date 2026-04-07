@@ -9,7 +9,7 @@ from database import engine
 import models
 
 # Importar todos los routers
-from routers import auth_users, auth_2fa, motos, mantenimientos, recordatorios
+from routers import auth_users, auth_2fa, motos, mantenimientos, recordatorios, pico_placa, notificaciones
 
 # Crear las tablas si no existen
 models.Base.metadata.create_all(bind=engine)
@@ -49,6 +49,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["http://localhost:5173", "http://127.0.0.1:5173"],
+    allow_origin_regex=r"^https?://(localhost|127\.0\.0\.1)(:\d+)?$",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -60,6 +61,8 @@ app.include_router(auth_2fa.router)
 app.include_router(motos.router)
 app.include_router(mantenimientos.router)
 app.include_router(recordatorios.router)
+app.include_router(pico_placa.router, prefix="/api")
+app.include_router(notificaciones.router)
 
 @app.get("/")
 def read_root():
@@ -75,4 +78,6 @@ def read_root():
 def health_check():
     """Verificar estado de la API"""
     return {"status": "healthy", "service": "roadkeeper-api"}
+
+# ROADKEEPER - modificado por Copilot 2026-04-06
 

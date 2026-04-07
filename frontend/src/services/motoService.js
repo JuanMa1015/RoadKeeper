@@ -3,16 +3,16 @@ import axios from 'axios';
 const api = axios.create({ baseURL: 'http://localhost:8000' });
 
 api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('token');
+  const token = sessionStorage.getItem('token');
   if (token) config.headers.Authorization = `Bearer ${token}`;
   return config;
 });
 
-export const getMotos = async () => (await api.get('/motos')).data;
+export const getMotos = async () => (await api.get('/motos/')).data;
 
 export const createMoto = async (motoData) => {
-    const token = localStorage.getItem('token');
-    const response = await axios.post('http://localhost:8000/motos', motoData, {
+  const token = sessionStorage.getItem('token');
+    const response = await axios.post('http://localhost:8000/motos/', motoData, {
         headers: {
             'Authorization': `Bearer ${token}` // ¡Esto es vital!
         }
@@ -26,9 +26,17 @@ export const updateKilometraje = async (id, km) => {
 
 // Se agregó la exportación que faltaba
 export const getNotificaciones = async () => {
-  return (await api.get('/notificaciones')).data;
+  return (await api.get('/mantenimientos/notificaciones')).data;
 };
 
 export const registrarMantenimiento = async (data) => {
-  return (await api.post('/mantenimientos', data)).data;
+  return (await api.post('/mantenimientos/', data)).data;
+};
+
+export const getNotificacionesPendientes = async () => {
+  return (await api.get('/notificaciones/pendientes')).data;
+};
+
+export const enviarNotificacionesEmail = async () => {
+  return (await api.post('/notificaciones/enviar-email')).data;
 };

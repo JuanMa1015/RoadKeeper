@@ -148,7 +148,7 @@ def verify_setup_2fa(
         )
     
     totp_secret = payload.get("totp_secret")
-    code = payload.get("code")
+    code = str(payload.get("code", "")).strip().replace(" ", "")
     
     if not totp_secret or not code:
         raise HTTPException(
@@ -156,16 +156,22 @@ def verify_setup_2fa(
             detail="totp_secret y code son requeridos"
         )
     
+    if not code.isdigit() or len(code) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ingresa un código válido de 6 dígitos"
+        )
+
     totp = pyotp.TOTP(totp_secret)
-    if not totp.verify(code):
+    if not totp.verify(code, valid_window=1):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Código TOTP inválido"
+            detail="Código TOTP inválido o expirado"
         )
     
     # Guardar el secret en BD y activar 2FA
     current_user.totp_secret = totp_secret
-    current_user.two_factor_enabled = True
+    current_user.two_factor_enabled = 1
     db.commit()
     
     return {
@@ -207,11 +213,18 @@ def login_verify_2fa(
             detail="TOTP secret no configurado"
         )
     
+    normalized_code = str(code).strip().replace(" ", "")
+    if not normalized_code.isdigit() or len(normalized_code) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ingresa un código válido de 6 dígitos"
+        )
+
     totp = pyotp.TOTP(current_user.totp_secret)
-    if not totp.verify(code):
+    if not totp.verify(normalized_code, valid_window=1):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Código TOTP inválido"
+            detail="Código TOTP inválido o expirado"
         )
     
     # Emitir JWT de acceso completo
@@ -231,7 +244,8 @@ def login_verify_2fa(
 @router.post("/2fa/disable")
 def disable_2fa(
     code: str = Body(..., embed=True),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user)
 ):
     """
     Desactiva 2FA para el usuario autenticado.
@@ -247,23 +261,28 @@ def disable_2fa(
       "message": "2FA desactivado"
     }
     """
-    current_user = get_current_user(db=db)
-    
     if not current_user.two_factor_enabled:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="2FA no está activado para este usuario"
         )
     
+    normalized_code = str(code).strip().replace(" ", "")
+    if not normalized_code.isdigit() or len(normalized_code) != 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Ingresa un código válido de 6 dígitos"
+        )
+
     totp = pyotp.TOTP(current_user.totp_secret)
-    if not totp.verify(code):
+    if not totp.verify(normalized_code, valid_window=1):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Código TOTP inválido"
+            detail="Código TOTP inválido o expirado"
         )
     
     current_user.totp_secret = None
-    current_user.two_factor_enabled = False
+    current_user.two_factor_enabled = 0
     db.commit()
     
     return {

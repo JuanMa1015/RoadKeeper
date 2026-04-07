@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime, date
 from typing import List, Optional, Literal
 
@@ -41,10 +41,12 @@ class MantenimientoCreate(MantenimientoBase):
 
 class MantenimientoResponse(MantenimientoBase):
     id: int
-    fecha_servicio: Optional[date] = None 
+    # El modelo ORM usa `fecha`; la API expone `fecha_servicio` para el frontend.
+    fecha_servicio: Optional[date] = Field(default=None, validation_alias="fecha")
 
     class Config:
         from_attributes = True
+        populate_by_name = True
 
 # --- SCHEMAS DE MOTO ---
 class MotoBase(BaseModel):

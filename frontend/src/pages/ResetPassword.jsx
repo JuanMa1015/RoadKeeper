@@ -56,13 +56,13 @@ export default function ResetPassword() {
 
         {message && (
           <div className="p-4 text-xs font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 rounded-2xl mb-6 relative z-10">
-            ✓ {message}
+            {message}
           </div>
         )}
 
         {error && (
           <div className="p-4 text-xs font-bold text-red-500 bg-red-500/10 border border-red-500/20 rounded-2xl mb-6 relative z-10">
-            ⚠️ {error}
+            {error}
           </div>
         )}
 

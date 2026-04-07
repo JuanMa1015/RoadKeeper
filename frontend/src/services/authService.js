@@ -31,9 +31,9 @@ export const loginUser = async (username, password) => {
         return response.data;  // { requires_2fa: true, temp_token: "..." }
     }
     
-    // Si no requiere 2FA, guardar el token completo en localStorage
+    // Si no requiere 2FA, guardar el token completo en sessionStorage
     if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+        sessionStorage.setItem('token', response.data.access_token);
     }
     return response.data;
 };
@@ -50,14 +50,14 @@ export const verify2FA = async (code) => {
     });
 
     if (response.data.access_token) {
-        localStorage.setItem('token', response.data.access_token);
+        sessionStorage.setItem('token', response.data.access_token);
         sessionStorage.removeItem('temp_token');  // Limpiar el temp_token
     }
     return response.data;
 };
 
 export const setup2FA = async () => {
-    const response = await api.get('/auth/2fa/setup');
+    const response = await api.post('/auth/2fa/setup');
     return response.data;
 };
 
